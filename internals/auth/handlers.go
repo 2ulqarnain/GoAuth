@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func RootHandler(w http.ResponseWriter, r *http.Request) {
+func RootHandler(w http.ResponseWriter, _ *http.Request) {
 	_, err := w.Write([]byte("auth ok"))
 	if err != nil {
 		log.Printf("failed to write response: %v", err)
