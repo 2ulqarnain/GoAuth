@@ -1,9 +1,9 @@
 package main
 
 import (
-	"GoAuth/internals/auth"
-	"GoAuth/internals/config"
-	"GoAuth/internals/db"
+	"GoAuth/internal/auth"
+	"GoAuth/internal/config"
+	"GoAuth/internal/db"
 	"context"
 	"fmt"
 	"log"

@@ -20,7 +20,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("username: %s\n", payload.Username)
+	fmt.Printf("username: %s\n", payload.Email)
 	fmt.Printf("password: %s\n", payload.Password)
 	w.Write([]byte("Logged in successfully!"))
 }
