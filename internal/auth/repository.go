@@ -1,17 +1,36 @@
 package auth
 
-import "github.com/jackc/pgx/v5/pgxpool"
+import (
+	"GoAuth/internal/db"
+	"context"
+)
 
-type authRepository struct {
-	db *pgxpool.Pool
+type Repository struct {
+	db *db.Queries
 }
 
-func newAuthRepository(db *pgxpool.Pool) *authRepository {
-	return &authRepository{
+func NewAuthRepository(db *db.Queries) *Repository {
+	return &Repository{
 		db: db,
 	}
 }
 
-//func (r *pgxpool.Pool) createUser(user RegisterPayload) {
-//
-//}
+func (r *Repository) createUser(ctx context.Context, user db.CreateUserParams) (*db.User, error) {
+	createdUser, err := r.db.CreateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return &createdUser, nil
+}
+
+func (r *Repository) getUserByEmail(ctx context.Context, email string) (*db.User, error) {
+	user, err := r.db.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	return &db.User{
+		Name:         user.Name,
+		Email:        user.Email,
+		PasswordHash: user.PasswordHash,
+	}, nil
+}

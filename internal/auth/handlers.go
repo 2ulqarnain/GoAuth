@@ -7,6 +7,14 @@ import (
 	"net/http"
 )
 
+type AuthHandler struct {
+	svc *AuthService
+}
+
+func NewAuthHandler(auth *AuthService) *AuthHandler {
+	return &AuthHandler{svc: auth}
+}
+
 func RootHandler(w http.ResponseWriter, _ *http.Request) {
 	_, err := w.Write([]byte("auth ok"))
 	if err != nil {
@@ -14,13 +22,31 @@ func RootHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var payload LoginPayload
+func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var payload loginPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("username: %s\n", payload.Email)
-	fmt.Printf("password: %s\n", payload.Password)
-	w.Write([]byte("Logged in successfully!"))
+	err := h.svc.Login(r.Context(), payload)
+	if err != nil {
+		if err.Error() == "incorrect password" {
+			http.Error(w, "incorrect password", http.StatusUnauthorized)
+		} else if err.Error() == "no rows in result set" {
+			http.Error(w, "No account against provided credentials", http.StatusUnauthorized)
+		} else {
+			fmt.Printf("failed to login: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}
+
+	w.Write([]byte("ok"))
+}
+
+func (h *AuthHandler) SignupHandler(w http.ResponseWriter, r *http.Request) {
+	var payload loginPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Payload format not correct", http.StatusBadRequest)
+	}
+
 }
