@@ -7,12 +7,12 @@ import (
 	"net/http"
 )
 
-type AuthHandler struct {
+type Handler struct {
 	svc *AuthService
 }
 
-func NewAuthHandler(auth *AuthService) *AuthHandler {
-	return &AuthHandler{svc: auth}
+func NewAuthHandler(auth *AuthService) *Handler {
+	return &Handler{svc: auth}
 }
 
 func RootHandler(w http.ResponseWriter, _ *http.Request) {
@@ -22,7 +22,7 @@ func RootHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var payload loginPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -43,10 +43,28 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
 
-func (h *AuthHandler) SignupHandler(w http.ResponseWriter, r *http.Request) {
-	var payload loginPayload
+func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
+	var payload signupPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "Payload format not correct", http.StatusBadRequest)
 	}
-
+	user, err := h.svc.Signup(r.Context(), payload)
+	if err != nil || user == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	response := &signupResponse{
+		Ok:      true,
+		Message: "signup ok",
+		Data: &signupResponseData{
+			Id:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
+		},
+	}
+	if err := json.NewEncoder(w).Encode(&response); err != nil {
+		log.Printf("failed to write response: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

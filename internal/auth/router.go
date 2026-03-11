@@ -13,6 +13,7 @@ func NewAuthRouter(svc *AuthService) chi.Router {
 	r.Use(middleware.Logger)
 	r.Get("/", RootHandler)
 	r.Post("/login", authHandler.LoginHandler)
+	r.Post("/signup", authHandler.SignupHandler)
 
 	return r
 }

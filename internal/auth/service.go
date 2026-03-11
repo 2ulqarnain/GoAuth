@@ -14,7 +14,7 @@ func NewAuthService(r *Repository) *AuthService {
 	return &AuthService{repo: r}
 }
 
-func (s *AuthService) Signup(ctx context.Context, user registerUserPayload) (*db.User, error) {
+func (s *AuthService) Signup(ctx context.Context, user signupPayload) (*db.User, error) {
 	hash, err := HashPassword(user.Password)
 	if err != nil {
 		return nil, err
