@@ -2,16 +2,15 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
 
 type Handler struct {
-	svc *AuthService
+	svc *Service
 }
 
-func NewAuthHandler(auth *AuthService) *Handler {
+func NewAuthHandler(auth *Service) *Handler {
 	return &Handler{svc: auth}
 }
 
@@ -30,17 +29,27 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err := h.svc.Login(r.Context(), payload)
 	if err != nil {
-		if err.Error() == "incorrect password" {
+		if err.Error() == "svc Login: password is incorrect" {
+			log.Println(err.Error())
 			http.Error(w, "incorrect password", http.StatusUnauthorized)
 		} else if err.Error() == "no rows in result set" {
+			log.Println(err.Error())
 			http.Error(w, "No account against provided credentials", http.StatusUnauthorized)
 		} else {
-			fmt.Printf("failed to login: %v", err)
+			log.Printf("failed to login: %v\n", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
+	} else {
+		w.Write([]byte("ok"))
 	}
 
-	w.Write([]byte("ok"))
+	//TODO: clean code
+	//if err != nil {
+	//	switch err {
+	//	case errors.Is(err, errs.ErrInvalidPassword):
+	//		utils.WriteError(w, 400, errs.ErrInvalidPassword)
+	//	}
+	//}
 }
 
 func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,11 +65,7 @@ func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	response := &signupResponse{
 		Ok:      true,
 		Message: "signup ok",
-		Data: &signupResponseData{
-			Id:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+		Data:    user,
 	}
 	if err := json.NewEncoder(w).Encode(&response); err != nil {
 		log.Printf("failed to write response: %v", err)

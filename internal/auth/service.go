@@ -2,22 +2,23 @@ package auth
 
 import (
 	"GoAuth/internal/db"
+	"GoAuth/internal/errs"
 	"context"
-	"errors"
+	"fmt"
 )
 
-type AuthService struct {
+type Service struct {
 	repo *Repository
 }
 
-func NewAuthService(r *Repository) *AuthService {
-	return &AuthService{repo: r}
+func NewAuthService(r *Repository) *Service {
+	return &Service{repo: r}
 }
 
-func (s *AuthService) Signup(ctx context.Context, user signupPayload) (*db.User, error) {
+func (s *Service) Signup(ctx context.Context, user signupPayload) (*db.CreateUserRow, error) {
 	hash, err := HashPassword(user.Password)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("svc Signup: %v", err)
 	}
 
 	return s.repo.createUser(ctx, db.CreateUserParams{
@@ -27,20 +28,16 @@ func (s *AuthService) Signup(ctx context.Context, user signupPayload) (*db.User,
 	})
 }
 
-func (s *AuthService) Login(ctx context.Context, user loginPayload) error {
+func (s *Service) Login(ctx context.Context, user loginPayload) error {
 	userByEmail, err := s.repo.getUserByEmail(ctx, user.Email)
 	if err != nil {
-		return err
+		return fmt.Errorf("svc Login -> %v", err)
 	}
-	hashedPassword, err := HashPassword(user.Password)
+	isVerified, err := VerifyPassword(userByEmail.PasswordHash, user.Password)
 	if err != nil {
-		return err
-	}
-	isVerified, err := VerifyPassword(hashedPassword, userByEmail.PasswordHash)
-	if err != nil {
-		return err
+		return fmt.Errorf("svc Login VerifyPass: %v", err)
 	} else if !isVerified {
-		return errors.New("incorrect password")
+		return errs.ErrInvalidPassword
 	}
 	return nil
 }

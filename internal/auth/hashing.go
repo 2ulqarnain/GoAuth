@@ -1,10 +1,10 @@
 package auth
 
 import (
+	"GoAuth/internal/errs"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -36,8 +36,8 @@ func HashPassword(password string) (string, error) {
 		keyLength,
 	)
 
-	b64Salt := base64.StdEncoding.EncodeToString(salt)
-	b64Hash := base64.StdEncoding.EncodeToString(hash)
+	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
 	encoded := fmt.Sprintf("$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s",
 		memory,
@@ -53,12 +53,12 @@ func HashPassword(password string) (string, error) {
 func VerifyPassword(hashedPassword, password string) (bool, error) {
 	parts := strings.Split(hashedPassword, "$")
 	if len(parts) != 6 {
-		return false, errors.New("invalid format for stored hash")
+		return false, errs.ErrInvalidStoredHash
 	}
 	var mem, iter uint32
 	var par uint8
 
-	_, err := fmt.Sscanf(parts[3], "m=%d, t=%d, p=%d", &mem, &iter, &par)
+	_, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &mem, &iter, &par)
 	if err != nil {
 		return false, err
 	}

@@ -1,5 +1,7 @@
 package auth
 
+import "GoAuth/internal/db"
+
 type loginPayload struct {
 	Email    string `json:"email,required"`
 	Password string `json:"password,required"`
@@ -18,7 +20,7 @@ type signupResponseData struct {
 }
 
 type signupResponse struct {
-	Ok      bool                `json:"ok"`
-	Message string              `json:"message"`
-	Data    *signupResponseData `json:"data"`
+	Ok      bool              `json:"ok"`
+	Message string            `json:"message"`
+	Data    *db.CreateUserRow `json:"data"`
 }
