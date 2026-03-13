@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"GoAuth/internal/errs"
+	"GoAuth/internal/utils"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 )
@@ -28,28 +31,23 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err := h.svc.Login(r.Context(), payload)
-	if err != nil {
-		if err.Error() == "svc Login: password is incorrect" {
-			log.Println(err.Error())
-			http.Error(w, "incorrect password", http.StatusUnauthorized)
-		} else if err.Error() == "no rows in result set" {
-			log.Println(err.Error())
-			http.Error(w, "No account against provided credentials", http.StatusUnauthorized)
-		} else {
-			log.Printf("failed to login: %v\n", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-	} else {
-		w.Write([]byte("ok"))
-	}
 
-	//TODO: clean code
-	//if err != nil {
-	//	switch err {
-	//	case errors.Is(err, errs.ErrInvalidPassword):
-	//		utils.WriteError(w, 400, errs.ErrInvalidPassword)
-	//	}
-	//}
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrInvalidPassword):
+			utils.WriteError(w, 400, errs.ErrInvalidPassword)
+		case errors.Is(err, errors.New("no rows in result set")):
+			utils.WriteError(w, 400, errs.ErrUserNotFound)
+		default:
+			log.Printf("svc login error: %v", err)
+			utils.WriteError(w, 500, errs.ErrInternalServerError)
+		}
+		return
+	}
+	utils.WriteJSON(w, 200, map[string]any{
+		"accessToken":  "Hello From Access Token",
+		"refreshToken": "Hello From Refresh Token",
+	})
 }
 
 func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
