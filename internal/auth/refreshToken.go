@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 )
 
+// GenerateRefreshToken generates string and hash of refresh token.
+// first value in returned values is string and the second one is hashed string
 func GenerateRefreshToken() (string, string, error) {
 	token := make([]byte, 32)
 	_, err := rand.Read(token)
@@ -21,6 +23,7 @@ func GenerateRefreshToken() (string, string, error) {
 	return tokenString, hashString, nil
 }
 
+// HashRefreshToken hashes given token
 func HashRefreshToken(tokenString string) string {
 	hash := sha256.Sum256([]byte(tokenString))
 

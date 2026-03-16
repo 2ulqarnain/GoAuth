@@ -14,9 +14,9 @@ func NewJWTManager(secret string) *JWTManager {
 	return &JWTManager{secret: []byte(secret)}
 }
 
-func (j *JWTManager) GenerateToken(userID string, ttl time.Duration) (string, error) {
+func (j *JWTManager) GenerateToken(userID int32, ttl time.Duration) (string, error) {
 	claims := jwt.RegisteredClaims{
-		Subject:   userID,
+		Subject:   string(userID),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 	}

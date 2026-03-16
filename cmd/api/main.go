@@ -17,7 +17,8 @@ func main() {
 	defer pool.Close()
 	queries := db.New(pool)
 	repo := auth.NewAuthRepository(queries)
-	svc := auth.NewAuthService(repo)
+	jwtManager := auth.NewJWTManager("Top Secret")
+	svc := auth.NewAuthService(repo, jwtManager)
 	r := auth.NewAuthRouter(svc)
 
 	fmt.Printf("Starting server on port %s...\n", cfg.Port)
