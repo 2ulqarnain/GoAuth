@@ -9,10 +9,17 @@ import (
 )
 
 type RefreshToken struct {
-	ID        int32              `json:"id"`
+	ID        pgtype.UUID        `json:"id"`
 	UserID    int32              `json:"user_id"`
+	ParentID  pgtype.UUID        `json:"parent_id"`
 	TokenHash string             `json:"token_hash"`
+	Revoked   bool               `json:"revoked"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	// user device information if available
+	UserAgent pgtype.Text `json:"user_agent"`
+	// user ip address if available
+	UserIp pgtype.Text `json:"user_ip"`
 }
 
 type User struct {

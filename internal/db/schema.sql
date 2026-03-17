@@ -8,10 +8,18 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-    id serial primary key,
-    user_id int not null references users(id) on delete cascade,
-    token_hash text not null,
-    expires_at timestamptz default now()
+    id uuid primary key default gen_random_uuid(),
+    user_id integer not null references users(id),
+    parent_id uuid not null,
+    token_hash text not null unique,
+    revoked bool not null default false,
+    created_at timestamptz default now(),
+    expires_at timestamptz not null,
+    user_agent text,
+    user_ip text
 );
+
+comment on column refresh_tokens.user_ip is 'user ip address if available';
+comment on column refresh_tokens.user_agent is 'user device information if available';
 
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token_hash);

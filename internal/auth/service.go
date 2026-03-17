@@ -30,7 +30,7 @@ func (s *Service) Signup(ctx context.Context, user signupPayload) (*db.CreateUse
 	})
 }
 
-func (s *Service) Login(ctx context.Context, user loginPayload) (accessToken string, refreshToken string, err error) {
+func (s *Service) Login(ctx context.Context, user loginPayload) (string, string, error) {
 	userByEmail, err := s.repo.getUserByEmail(ctx, user.Email)
 	if err != nil {
 		return "", "", fmt.Errorf("svc Login -> %v", err)
@@ -42,8 +42,13 @@ func (s *Service) Login(ctx context.Context, user loginPayload) (accessToken str
 		return "", "", errs.ErrInvalidPassword
 	}
 
-	accessToken, _ = s.jwt.GenerateToken(userByEmail.ID, time.Minute*15)
-	refreshToken, refreshTokenHash, err := GenerateRefreshToken()
+	accessToken, _ := s.jwt.GenerateToken(userByEmail.ID, time.Minute*15)
+	_, refreshTokenHash, err := GenerateRefreshToken()
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshTokenHash, nil
+}
+
+func (s *Service) RenewAccessToken(ctx context.Context, refreshToken string) (string, error) {
+	tokenHash := HashRefreshToken(refreshToken)
+
 }
