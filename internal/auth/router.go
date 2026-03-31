@@ -14,6 +14,7 @@ func NewAuthRouter(svc *Service) chi.Router {
 	r.Get("/", RootHandler)
 	r.Post("/login", authHandler.LoginHandler)
 	r.Post("/signup", authHandler.SignupHandler)
+	r.Post("/refresh", authHandler.RenewAccessTokenHandler)
 
 	return r
 }

@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -34,6 +36,33 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const getRefreshToken = `-- name: GetRefreshToken :one
+SELECT id,user_id,token_hash,is_revoked,expires_at
+FROM refresh_tokens
+WHERE token_hash = $1
+`
+
+type GetRefreshTokenRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    int32              `json:"user_id"`
+	TokenHash string             `json:"token_hash"`
+	IsRevoked bool               `json:"is_revoked"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+}
+
+func (q *Queries) GetRefreshToken(ctx context.Context, tokenHash string) (GetRefreshTokenRow, error) {
+	row := q.db.QueryRow(ctx, getRefreshToken, tokenHash)
+	var i GetRefreshTokenRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TokenHash,
+		&i.IsRevoked,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 select name, email, password_hash from users where email = $1
 `
@@ -48,5 +77,40 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i GetUserByEmailRow
 	err := row.Scan(&i.Name, &i.Email, &i.PasswordHash)
+	return i, err
+}
+
+const insertRefreshToken = `-- name: InsertRefreshToken :one
+INSERT INTO refresh_tokens (user_id, parent_id, token_hash, expires_at, user_agent, user_ip)
+VALUES ($1,$2,$3,$4,$5,$6)
+RETURNING id, user_id, expires_at
+`
+
+type InsertRefreshTokenParams struct {
+	UserID    int32              `json:"user_id"`
+	ParentID  pgtype.UUID        `json:"parent_id"`
+	TokenHash string             `json:"token_hash"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	UserAgent pgtype.Text        `json:"user_agent"`
+	UserIp    pgtype.Text        `json:"user_ip"`
+}
+
+type InsertRefreshTokenRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    int32              `json:"user_id"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+}
+
+func (q *Queries) InsertRefreshToken(ctx context.Context, arg InsertRefreshTokenParams) (InsertRefreshTokenRow, error) {
+	row := q.db.QueryRow(ctx, insertRefreshToken,
+		arg.UserID,
+		arg.ParentID,
+		arg.TokenHash,
+		arg.ExpiresAt,
+		arg.UserAgent,
+		arg.UserIp,
+	)
+	var i InsertRefreshTokenRow
+	err := row.Scan(&i.ID, &i.UserID, &i.ExpiresAt)
 	return i, err
 }

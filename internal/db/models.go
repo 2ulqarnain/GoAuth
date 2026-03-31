@@ -13,7 +13,7 @@ type RefreshToken struct {
 	UserID    int32              `json:"user_id"`
 	ParentID  pgtype.UUID        `json:"parent_id"`
 	TokenHash string             `json:"token_hash"`
-	Revoked   bool               `json:"revoked"`
+	IsRevoked bool               `json:"is_revoked"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
 	// user device information if available

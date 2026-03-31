@@ -35,3 +35,12 @@ func (r *Repository) getUserByEmail(ctx context.Context, email string) (*db.User
 		PasswordHash: user.PasswordHash,
 	}, nil
 }
+
+func (r *Repository) getTokenDetailsByTokenHash(ctx context.Context, hash string) (string, error) {
+	refreshToken, err := r.db.GetRefreshToken(ctx, hash)
+	if err != nil {
+		return "", fmt.Errorf("repo getTokenDetailsByTokenHash: %v", err)
+	}
+	fmt.Printf("refreshToken: %v\n", refreshToken)
+	return "", nil
+}

@@ -5,6 +5,7 @@ import (
 	"GoAuth/internal/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -30,7 +31,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.svc.Login(r.Context(), payload)
+	accessToken, refreshToken, err := h.svc.Login(r.Context(), payload)
 
 	if err != nil {
 		switch {
@@ -45,8 +46,8 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.WriteJSON(w, 200, map[string]any{
-		"accessToken":  "Hello From Access Token",
-		"refreshToken": "Hello From Refresh Token",
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
 	})
 }
 
@@ -70,4 +71,19 @@ func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+type body struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+func (h *Handler) RenewAccessTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var payload body
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Payload format not correct", http.StatusBadRequest)
+	}
+
+	token, err := h.svc.RenewAccessToken(r.Context(), payload.RefreshToken)
+	fmt.Printf("token: %s,err: %v\n", token, err)
 }

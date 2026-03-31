@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     user_id integer not null references users(id),
     parent_id uuid not null,
     token_hash text not null unique,
-    revoked bool not null default false,
+    is_revoked bool not null default false,
     created_at timestamptz default now(),
     expires_at timestamptz not null,
     user_agent text,
